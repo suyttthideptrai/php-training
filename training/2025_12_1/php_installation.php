@@ -1,5 +1,8 @@
 <?php
-require_once '../../dau.php';
+$phpDir = dirname(__DIR__, 2);
+require_once $phpDir . '/bootstrap.php';
+base_require('dau.php');
+
 $cmd = "php -v";
 $output = [];
 $returnCode = 0;
@@ -29,6 +32,6 @@ if (!empty($pathOutput)) {
 }
 echo "</pre>";
 
-require_once '../../dit.php';
+base_require('dit.php');
 ?>
 

@@ -1,54 +1,138 @@
 <?php
-$phpBinary = PHP_BINARY;
-require_once __DIR__ . '/linhtinh/Parsedown.php';
+require_once __DIR__ . '/bootstrap.php';
+base_require('/linhtinh/Parsedown.php');  // Thư viện chuyển markdown sang HTML
 
+/**
+ * Utility class sử dụng để kiểm tra nền tảng OS hiện tại
+ * Phát hiện bằng cách so sánh hằng DIRECTORY_SEPARATOR và PHP_OS_FAMILY
+ */
+final class PlatformUtils
+{
+    public static function isWindows(): bool
+    {
+        // khai báo kí tự \ trong string sử dụng \\
+        return \DIRECTORY_SEPARATOR === '\\';
+    }
 
+    public static function isUnix(): bool
+    {
+        // Bao gồm Linux, macOS, BSD…
+        return \DIRECTORY_SEPARATOR === '/';
+    }
 
-function markdown($text) {
+    public static function isMac(): bool
+    {
+        return \PHP_OS_FAMILY === 'Darwin';
+    }
+
+    public static function isLinux(): bool
+    {
+        return \PHP_OS_FAMILY === 'Linux';
+    }
+
+    public static function getFamily(): string
+    {
+        return \PHP_OS_FAMILY; // Windows, Linux, Darwin, BSD, Solaris
+    }
+}
+
+/**
+ * Utility class cho HTML Element
+ */
+final class HtmlUtils
+{
+    /**
+     * Bọc code trong thẻ <pre><code no-lint>...</code></pre>
+     */
+    public static function wrapCode($elm, $isLint=false): string
+    {
+        if ($isLint)
+        {
+            return '<pre><code class="language-php">' . $elm . '</code></pre>';
+        }
+        else
+        {
+            return '<pre><code class="no-lint">' . $elm . '</code></pre>';
+        }
+    }
+}
+
+/**
+ * Chuyển đổi markdown sang HTML, với khả năng thực thi code PHP nhúng
+ */
+function markdown($text, $isDebug = false)
+{
 
     $CODE_DEL = '&&&';
     $EXECUTABLE = '+';
 
     $Parsedown = new Parsedown();
 
-    if (!str_contains($text, $CODE_DEL)) {
+    if (!str_contains($text, $CODE_DEL))
+    {
         return $Parsedown->text($text);
     }
 
     $parts = explode($CODE_DEL, $text);
     $result = '';
-    foreach ($parts as $index => $part) {
-        if (str_starts_with($parts[$index], $EXECUTABLE)) {
+    foreach ($parts as $index => $part)
+    {
+        if (str_starts_with($parts[$index], $EXECUTABLE))
+        {
             $trimmed = trim($parts[$index]);
             $code = substr($trimmed, 1);
-            $output = exec_use_current_php($code);
-            $result .= '<pre><code>' . $output . '</code></pre>';
-        } else {
+            $output = exec_use_current_php($code, $isDebug);
+            $result .= HtmlUtils::wrapCode(implode('<br>', $output));
+        } 
+        else
+        {
             $result .= $Parsedown->text($parts[$index]);
         }
     }
     return $result;
 }
 
-function exec_use_current_php($cmd) {
-    global $phpBinary;
-
+/**
+ * Thực thi đoạn code PHP sử dụng bin PHP hiện tại, giống subprocess trong Python
+ */
+function exec_use_current_php($cmd, $isDebug = false)
+{
     $output = [];
     $returnCode = 0;
-
-    // Process for windows, TODO: unix later
-    $cmd = str_replace('"', "'", $cmd);
     $cmd = trim($cmd);
-    $cmd = preg_replace('/\r\n|\r|\n/', '', $cmd);
 
-    $mergeCmd = "$phpBinary -r \"$cmd\"";
+    // Rất là ngược nhưng phải chịu
+    if (PlatformUtils::isWindows())
+    {
+        // Windows: command wrapper sử dụng "
+        // Escape " -> '
+        $cmd = str_replace("\"", "'", $cmd);
+        // Loại bỏ khoảng trống để exec code 1 line
+        $cmd = preg_replace('/\r\n|\r|\n/', '', $cmd);
+        $mergeCmd = "php -r \"$cmd\"";
 
-    // echo "Debug: Full command to execute: " . $mergeCmd . "\n";
+    }
+    if (PlatformUtils::isUnix())
+    {
+        // Unix: command wrapper sử dụng '
+        // Escape ' -> "
+        $cmd = str_replace("'", "\"", $cmd);
+        $cmd = preg_replace('/\r\n|\r|\n/', '', $cmd);
+        $mergeCmd = "php -r '$cmd'";
+    }
+
+    if ($isDebug)
+    {
+        echo "<p>Debug: Full command to execute: " . "<pre>" . $mergeCmd . "</pre>" . "</p>";
+    }
     exec($mergeCmd, $output, $returnCode);
-    // print_r($output);
+    if ($isDebug)
+    {
+        echo "<p>Debug: Out: " . "<pre><code>" . implode('<br>', $output) . "</code></pre>" . "</p>";
+    }
 
     if ($returnCode !== 0) {
         return "Error executing code. Return code: $returnCode";
     }
-    return $output[0];
+    return $output;
 }

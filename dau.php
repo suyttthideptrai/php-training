@@ -1,15 +1,21 @@
 <?php
 require_once 'utils.php';
-$base_dir = __DIR__;
-$files = glob($base_dir . '/' . 'training' . '/**/*.php');
+require_once 'bootstrap.php';
+$base_dir = base_path('/training');
+$files = glob($base_dir . '/**/*.php');
 foreach ($files as $key => $file) {
     $files[$key] = str_replace($base_dir . '/', '', $file);
 }
+$current_page_file = $_SERVER['PHP_SELF'];
+$current_page_file = base_path($current_page_file);
+$php_source = htmlspecialchars(file_get_contents($current_page_file), ENT_QUOTES, 'UTF-8');
+
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" class="dark"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
   <title>Training PHP</title>
     <style>
     body {
@@ -33,6 +39,25 @@ foreach ($files as $key => $file) {
     #page-content {
       flex-grow: 1;
       padding: 2.5rem;
+      overflow-y: scroll;
+    }
+    #page-content-source {
+      flex-grow: 1;
+      padding: 2.5rem;
+      overflow-y: scroll;
+    }
+    pre code.no-lint {
+      background-color: #01101fff;
+      color: #37d108ff;
+      display: block;
+      padding: 1rem;
+      border-radius: 0.25rem;
+    }
+    pre code.language-php {
+      display: block;
+      padding: 1rem;
+      border-radius: 0.25rem;
+      border: 2px solid #2f619dff;
     }
   </style>
 </head>
@@ -42,14 +67,34 @@ foreach ($files as $key => $file) {
         <h3>Training PHP Navigation</h3>
     </a>
     <ul>
-        <? foreach ($files as $file): ?>
-            <li>
-                <a href="<?php echo '/' . $file; ?>">
-                <?php echo str_replace('training/', '', $file); ?>
-                </a>
-            </li>
-        <? endforeach; ?>
+      <?php foreach ($files as $file): ?>
+          <li>
+              <a href="<?php echo '/training/' . $file; ?>">
+                  <?php echo $file; ?>
+              </a>
+          </li>
+      <?php endforeach; ?>
     </ul>
 </div>
+<div  id="toggle-show-source"
+      class="btn btn-secondary"
+      style="position: fixed; top: 1rem; right: 1rem; z-index: 1000;"
+      onclick="{
+        const content = document.getElementById('page-content');
+        const source = document.getElementById('page-content-source');
+        if (source.style.display === 'none') {
+            source.style.display = 'block';
+            content.style.display = 'none';
+        } else {
+            source.style.display = 'none';
+            content.style.display = 'block';
+        }
+      }"
+>
+    Ẩn hiện source code
+</div>
+<!-- BEGIN SOURCE -->
+<div id="page-content-source" style="display: none;"><?php echo HtmlUtils::wrapCode($php_source, true); ?></div>
+<!-- END SOURCE -->
 <!-- BEGIN CONTENT -->
-<div id="page-content">
+<div id="page-content" class="h-100">
