@@ -1,8 +1,6 @@
-<?php
-$phpDir = dirname(__DIR__, 2);
-require_once $phpDir . '/bootstrap.php';
-base_require('dau.php');
+# Cài đặt PHP trên máy server
 
+```php
 $cmd = "php -v";
 $output = [];
 $returnCode = 0;
@@ -31,7 +29,6 @@ if (!empty($pathOutput)) {
     echo "Không thể tìm thấy đường dẫn PHP (cmd: {$cmd})";
 }
 echo "</pre>";
+```
 
-base_require('dit.php');
-?>
 

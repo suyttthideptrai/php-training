@@ -1,11 +1,6 @@
-<?php
-require_once dirname(__DIR__, 2) . '/bootstrap.php';
-base_require('dau.php');
-?>
 
-<h3>Các PHP syntax</h3>
+# Các PHP syntax
 
-<?php echo markdown('
 1. Viết code PHP
 - Viết code PHP thì phải bắt đầu bằng thẻ mở <?php
 - Có thể không cần thẻ đóng ?> nếu file chỉ có code PHP
@@ -19,12 +14,6 @@ echo "<hr>";
 echo "Nội dung cần in";
 echo "<hr>";
 ```
-- Output:
-&&&+
-echo "<hr>";
-echo "Nội dung cần in";
-echo "<hr>";
-&&&
 
 3. Các Keyword - Case Insensitive
 - Các keyword trong PHP không phân biệt chữ hoa chữ thường (case insensitive)
@@ -38,15 +27,6 @@ ECHO "ECHO";
 echO "echO";
 echo "<hr>";
 ```
-- Output:
-&&&+
-echo "<hr>";
-echo "echo";
-Echo "Echo";
-ECHO "ECHO";
-echO "echO";
-echo "<hr>";
-&&&
 
 4. Các tên biến - Case sensitive
 - Các tên biến trong PHP sẽ phân biệt chữ hoa chữ thường (case sensitive)
@@ -57,15 +37,3 @@ echo $car;   // In ra Toyota
 echo $Car;   // Warning: Undefined variable
 echo $CAR;   // Warning: Undefined variable
 ```
-- Output:
-&&&+
-$car = "Toyota";
-echo $car;   // In ra Toyota
-echo $Car;   // Warning: Undefined variable
-echo $CAR;   // Warning: Undefined variable
-&&&
-'); 
-?>
-
-
-<?php base_require('dit.php'); ?>

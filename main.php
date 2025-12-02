@@ -1,14 +1,27 @@
 <?php
 require_once 'utils.php';
 require_once 'bootstrap.php';
-$base_dir = base_path('/training');
-$files = glob($base_dir . '/**/*.php');
+
+// List all markdown files under /training
+
+$base_dir = base_path('training');
+$files = glob($base_dir . '/**/*.md');
 foreach ($files as $key => $file) {
-    $files[$key] = str_replace($base_dir . '/', '', $file);
+    $normalized = str_replace($base_dir, '', $file);
+    $normalized = str_replace('.md', '', $normalized);
+    $files[$key] = $normalized;
 }
-$current_page_file = $_SERVER['PHP_SELF'];
-$current_page_file = base_path($current_page_file);
-$php_source = htmlspecialchars(file_get_contents($current_page_file), ENT_QUOTES, 'UTF-8');
+
+// Get markdown resource to render
+
+$page = $_GET['f'] ?? '';
+if (empty($page)) {
+    $page = '/home'; // default page
+}
+$page_dir = $base_dir . $page . '.md';
+
+$source = file_get_contents($page_dir);
+$html_source = htmlspecialchars($source, ENT_QUOTES, 'UTF-8');
 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" class="dark"><head>
@@ -69,7 +82,7 @@ $php_source = htmlspecialchars(file_get_contents($current_page_file), ENT_QUOTES
     <ul>
       <?php foreach ($files as $file): ?>
           <li>
-              <a href="<?php echo '/training/' . $file; ?>">
+              <a href="<?php echo '/index.php?f=' . $file; ?>">
                   <?php echo $file; ?>
               </a>
           </li>
@@ -93,8 +106,32 @@ $php_source = htmlspecialchars(file_get_contents($current_page_file), ENT_QUOTES
 >
     Ẩn hiện source code
 </div>
-<!-- BEGIN SOURCE -->
-<div id="page-content-source" style="display: none;"><?php echo HtmlUtils::wrapCode($php_source, true); ?></div>
-<!-- END SOURCE -->
-<!-- BEGIN CONTENT -->
-<div id="page-content" class="h-100">
+
+    <!-- BEGIN SOURCE -->
+    <div id="page-content-source" style="display: none;"><?php echo HtmlUtils::wrapCode($html_source, true); ?></div>
+    <!-- END SOURCE -->
+
+    <!-- BEGIN CONTENT -->
+    <div id="page-content" class="h-100">
+
+    <?php if (str_contains($page, 'test_markdown_html_parser')) {
+        echo "<h2>Debug Markdown Parser</h2>";
+        echo markdown($source, true);
+    } else {
+        echo markdown($source);
+    }
+    ?>
+
+    <!-- END CONTENT -->
+    </div>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // Chỉ highlight thẻ có class language-php
+            document.querySelectorAll('pre code.language-php').forEach((block) => {
+            hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

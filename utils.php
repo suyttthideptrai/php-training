@@ -63,8 +63,8 @@ final class HtmlUtils
 function markdown($text, $isDebug = false)
 {
 
-    $CODE_DEL = '&&&';
-    $EXECUTABLE = '+';
+    $CODE_DEL = '```';
+    $EXECUTABLE = 'php';
 
     $Parsedown = new Parsedown();
 
@@ -74,17 +74,31 @@ function markdown($text, $isDebug = false)
     }
 
     $parts = explode($CODE_DEL, $text);
+    if ($isDebug)
+    {
+        echo "<p>Debug: Found " . count($parts) . " parts split by '" . $CODE_DEL . "'</p>";
+        echo "<pre>" . print_r($parts) . "</pre>";
+    }
     $result = '';
     foreach ($parts as $index => $part)
     {
+
+        // Execute code if it's executable PHP
         if (str_starts_with($parts[$index], $EXECUTABLE))
         {
+            // Parse html
+            $result .= $Parsedown->text($CODE_DEL . $parts[$index] . $CODE_DEL);
+
+            // Execute PHP code
             $trimmed = trim($parts[$index]);
-            $code = substr($trimmed, 1);
+            $code = ltrim($trimmed, $EXECUTABLE);
+            $code = trim($code);
+            if (empty($code)) {
+                continue;
+            }
             $output = exec_use_current_php($code, $isDebug);
             $result .= HtmlUtils::wrapCode(implode('<br>', $output));
-        } 
-        else
+        } else
         {
             $result .= $Parsedown->text($parts[$index]);
         }
@@ -101,7 +115,9 @@ function exec_use_current_php($cmd, $isDebug = false)
     $returnCode = 0;
     $cmd = trim($cmd);
 
-    // Rất là ngược nhưng phải chịu
+    // Loại bỏ comment dòng
+    $cmd = preg_replace('/\/\/.*$/m', '', $cmd);
+
     if (PlatformUtils::isWindows())
     {
         // Windows: command wrapper sử dụng "
@@ -123,7 +139,7 @@ function exec_use_current_php($cmd, $isDebug = false)
 
     if ($isDebug)
     {
-        echo "<p>Debug: Full command to execute: " . "<pre>" . $mergeCmd . "</pre>" . "</p>";
+        echo "<p>Debug: Full command to execute: " . "<pre><code>" . $mergeCmd . "</code></pre>" . "</p>";
     }
     exec($mergeCmd, $output, $returnCode);
     if ($isDebug)
@@ -132,7 +148,7 @@ function exec_use_current_php($cmd, $isDebug = false)
     }
 
     if ($returnCode !== 0) {
-        return "Error executing code. Return code: $returnCode";
+        return ["Error executing code. Return code: $returnCode"];
     }
     return $output;
-}
+} 
