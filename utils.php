@@ -140,7 +140,7 @@ function exec_use_current_php($cmd, $isDebug = false)
 
     if ($isDebug)
     {
-        echo "<p>Debug: Full command to execute: " . "<pre><code>" . $mergeCmd . "</code></pre>" . "</p>";
+        echo "<p>Debug: Full command to execute: " . "<pre><code>" . htmlspecialchars($mergeCmd) . "</code></pre>" . "</p>";
     }
     exec($mergeCmd, $output, $returnCode);
     if ($isDebug)
@@ -156,6 +156,15 @@ function exec_use_current_php($cmd, $isDebug = false)
 
 
 final class StringUtils {
+
+    public static function get_file_extension(string $str): string
+    {
+        $parts = explode('.', $str);
+        if (count($parts) < 2) {
+            return ''; // Không có phần mở rộng
+        }
+        return end($parts);
+    }
 
     public static function filename_to_sentence(string $str): str
     {
@@ -175,10 +184,30 @@ final class StringUtils {
 final class ContentUtils {
 
 
-    public static function get_navigation_data(string $base_dir): array
+    public static function get_navigation_data(string $base_dir, $supported_ext): array
     {
         // 1. Find all markdown files inside the folder (including subfolders)
-        $files = glob($base_dir . '/**/*.md');
+        // $files = [];
+        // $iterator = new RecursiveIteratorIterator(
+        //     new RecursiveDirectoryIterator($base_dir, RecursiveDirectoryIterator::SKIP_DOTS)
+        // );
+        // foreach ($iterator as $file) {
+        //     if ($file->isFile()) {
+        //         $ext = strtolower($file->getExtension());
+        //         if (in_array($ext, $supported_ext, true)) {
+        //             $files[] = $file->getPathname();
+        //         }
+        //     }
+        // }
+        // sort($files, SORT_STRING | SORT_FLAG_CASE);
+        $files = [];
+        foreach ($supported_ext as $ext) {
+            // TODO: Not optimized, can be improved later
+            $pattern = $base_dir . '/**/*.' . $ext;
+            $found_files = glob($pattern, GLOB_BRACE);
+            $files = array_merge($files, $found_files);
+        }
+        // print_debug($files); die;
 
         // 2. This array will store the final nested navigation
         $tree = [];
