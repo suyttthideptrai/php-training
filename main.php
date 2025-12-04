@@ -5,20 +5,23 @@ require_once 'bootstrap.php';
 // List all markdown files under /training
 
 $base_dir = base_path('training');
-$files = glob($base_dir . '/**/*.md');
-foreach ($files as $key => $file) {
-    $normalized = str_replace($base_dir, '', $file);
-    $normalized = str_replace('.md', '', $normalized);
-    $files[$key] = $normalized;
-}
+$nav_data = ContentUtils::get_navigation_data($base_dir);
+// print_debug($nav_data); die;
+// $files = glob($base_dir . '/**/*.md');
+// foreach ($files as $key => $file) {
+//     $normalized = str_replace($base_dir, '', $file);
+//     $normalized = str_replace('.md', '', $normalized);
+//     $files[$key] = $normalized;
+// }
 
-// Get markdown resource to render
+
+// Render contents
 
 $page = $_GET['f'] ?? '';
 if (empty($page)) {
-    $page = '/home'; // default page
+    $page = '/home.md'; // default page
 }
-$page_dir = $base_dir . $page . '.md';
+$page_dir = $base_dir . '/' . $page;
 
 $source = file_get_contents($page_dir);
 $html_source = htmlspecialchars($source, ENT_QUOTES, 'UTF-8');
@@ -27,8 +30,8 @@ $html_source = htmlspecialchars($source, ENT_QUOTES, 'UTF-8');
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" class="dark"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <link rel="stylesheet" href="/public/assets/css/bootstrap5.0.2.min.css">
+  <link rel="stylesheet" href="/public/assets/css/hightlightjs.default.min.css">
   <title>Training PHP</title>
     <style>
     body {
@@ -80,14 +83,25 @@ $html_source = htmlspecialchars($source, ENT_QUOTES, 'UTF-8');
         <h3>Training PHP Navigation</h3>
     </a>
     <ul>
-      <?php foreach ($files as $file): ?>
-          <li>
-              <a href="<?php echo '/index.php?f=' . $file; ?>">
-                  <?php echo $file; ?>
-              </a>
-          </li>
-      <?php endforeach; ?>
+    <?php foreach ($nav_data as $folder => $items): ?>
+        
+        <li>
+            <?php echo htmlspecialchars($folder); ?>
+
+            <ul>
+                <?php foreach ($items as $file): ?>
+                    <li>
+                        <a href="<?php echo '/index.php?f=' . $file['path']; ?>">
+                            <?php echo htmlspecialchars($file['label']); ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </li>
+
+    <?php endforeach; ?>
     </ul>
+
 </div>
 <div  id="toggle-show-source"
       class="btn btn-secondary"
@@ -124,7 +138,7 @@ $html_source = htmlspecialchars($source, ENT_QUOTES, 'UTF-8');
 
     <!-- END CONTENT -->
     </div>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="/public/assets/js/highlightjs.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             // Chỉ highlight thẻ có class language-php

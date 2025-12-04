@@ -55,6 +55,7 @@ final class HtmlUtils
             return '<pre><code class="no-lint">' . $elm . '</code></pre>';
         }
     }
+
 }
 
 /**
@@ -151,4 +152,101 @@ function exec_use_current_php($cmd, $isDebug = false)
         return ["Error executing code. Return code: $returnCode"];
     }
     return $output;
-} 
+}
+
+
+final class StringUtils {
+
+    public static function filename_to_sentence(string $str): str
+    {
+        // Loại bỏ phần mở rộng file
+        $str = preg_replace('/\.[^.]+$/', '', $str);
+
+        // Thay dấu gạch ngang và gạch dưới bằng dấu cách
+        $str = str_replace(['-', '_'], ' ', $str);
+
+
+        return $str;
+    }
+
+}
+
+
+final class ContentUtils {
+
+
+    public static function get_navigation_data(string $base_dir): array
+    {
+        // 1. Find all markdown files inside the folder (including subfolders)
+        $files = glob($base_dir . '/**/*.md');
+
+        // 2. This array will store the final nested navigation
+        $tree = [];
+
+        // 3. Process each file that was found
+        foreach ($files as $filePath) {
+
+            // -------------------------------
+            // Step A: Convert the full path into a clean relative path
+            // Example: "docs/guide/install.md" → "guide/install"
+            // -------------------------------
+
+            // Remove the base directory part (example: "docs/")
+            $relativePath = str_replace($base_dir . '/', '', $filePath);
+
+            // // Remove ".md" file extension
+            // $relativePath = str_replace('.md', '', $relativePath);
+
+            // -------------------------------
+            // Step B: Split path into folder names and file name
+            // Example: "guide/install" → ["guide", "install"]
+            // -------------------------------
+            $parts = explode('/', $relativePath);
+
+            // Take the last part as the filename
+            // Example: "install"
+            $fileName = array_pop($parts);
+
+            // -------------------------------
+            // Step C: Walk through the folders and build nested arrays
+            // -------------------------------
+
+            // Start at the root of the tree
+            $currentFolder = &$tree;
+
+            // Loop through all folders in the path
+            foreach ($parts as $folderName) {
+
+                // If this folder does NOT exist yet, create it
+                if (!isset($currentFolder[$folderName])) {
+                    $currentFolder[$folderName] = [];
+                }
+
+                // Move deeper into that folder
+                $currentFolder = &$currentFolder[$folderName];
+            }
+
+            // -------------------------------
+            // Step D: Add the file name into the last folder
+            // Example: $currentFolder[] = "install";
+            // -------------------------------
+            $nav_map = [
+                'label' => $fileName,
+                'path' => $relativePath
+            ];
+            $currentFolder[] = $nav_map;
+        }
+
+        // 4. Return the final structured navigation
+        return $tree;
+    }
+
+
+}
+
+function print_debug($var)
+{
+    echo "<pre>";
+    print_r($var);
+    echo "</pre>";
+}
