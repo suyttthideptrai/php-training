@@ -1,5 +1,7 @@
 # Mảng
 
+## Các kiểu mảng
+
 ### Mảng đơn giản
 ```php
 $cars = array("Volvo", "BMW", "Toyota");
@@ -20,6 +22,9 @@ print_r($myArr);
 $age = array("ThanhNT" => 25, "Quylaptrinh" => 22, "Suytthideptrai" => 30);
 print_r($age);
 ```
+
+-----
+
 
 ## Biển đổi mảng
 
@@ -59,7 +64,9 @@ array_shift($cars); // Xóa phần tử đầu tiên
 print_array_line($cars);
 ```
 
-### Sắp xếp mảng
+-----
+
+## Sắp xếp mảng
 ```php
 $cars = array("Volvo", "BMW", "Toyota", "Audi");
 
@@ -70,13 +77,48 @@ rsort($cars); // Sắp xếp giảm dần
 print_r($cars);
 ```
 
-### Sắp xếp mảng assoc
+#### Sắp xếp mảng assoc
+
+##### Sắp xếp theo `key`
 ```php
-$age = array("ThanhNT" => 25, "Quylaptrinh" => 22, "Suytthideptrai" => 30);
+$age = array("2. ThanhNT" => 25, "1. Quylaptrinh" => 22, "3. Suytthideptrai" => 30);
+
+ksort($age); // Sắp xếp theo giá trị tăng dần
+print_r($age);
+
+krsort($age); // [Korea Sort :D] Sắp xếp theo giá trị giảm dần
+print_r($age);
+```
+
+##### Sắp xếp theo `value`
+```php
+$age = array("2. ThanhNT" => 25, "1. Quylaptrinh" => 22, "3. Suytthideptrai" => 30);
 
 asort($age); // Sắp xếp theo giá trị tăng dần
 print_r($age);
 
 arsort($age); // Sắp xếp theo giá trị giảm dần
 print_r($age);
+```
+
+-----
+
+## Mảng đa chiều
+
+### 2 Chiều
+```php
+function printData($data) {
+    $format = "| %3d | %-15s | %-6s | %-3s |<br>";
+    printf($format, '#', 'Name', 'Sex', 'Age');
+    foreach ($data as $i => $row) {
+        printf($format, $i + 1, $row[0], $row[1], $row[2]);
+    }
+}
+$csv_value = [
+    // name          // sex.   // age
+    ['ThanhNT'       , 'male'  , 20],  // A person
+    ['Quylaptrinh'   , 'male'  , 21],
+    ['Suytthideptrai', 'female', 22],
+];
+printData($csv_value);
 ```

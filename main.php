@@ -8,13 +8,6 @@ $SUPPORTED_CONTENT_EXTENSIONS = ['md', 'php'];
 
 $base_dir = base_path('contents');
 $nav_data = ContentUtils::get_navigation_data($base_dir, $SUPPORTED_CONTENT_EXTENSIONS);
-// print_debug($nav_data); die;
-// $files = glob($base_dir . '/**/*.md');
-// foreach ($files as $key => $file) {
-//     $normalized = str_replace($base_dir, '', $file);
-//     $normalized = str_replace('.md', '', $normalized);
-//     $files[$key] = $normalized;
-// }
 
 
 // Content resolve
@@ -31,11 +24,12 @@ if (StringUtils::get_file_extension($page) === 'php') {
 
 $page_dir = $base_dir . '/' . $page;
 $source = '';
-try {
-  $source = file_get_contents($page_dir);
-} catch (Exception $e) {
-  echo "<script>allert('" . "Error loading content: . $e->getMessage() " . "');</script>";
+
+$source = file_get_contents($page_dir);
+if ($source === false) {
+    $source = "Error loading content from $page_dir";
 }
+
 $html_source = htmlspecialchars($source, ENT_QUOTES, 'UTF-8');
 
 ?>

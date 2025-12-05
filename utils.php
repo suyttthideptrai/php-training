@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
-base_require('/linhtinh/Parsedown.php');  // Thư viện chuyển markdown sang HTML
+base_require('/libs/Parsedown.php');  // Thư viện chuyển markdown sang HTML
 
 /**
  * Utility class sử dụng để kiểm tra nền tảng OS hiện tại
@@ -207,7 +207,32 @@ final class ContentUtils {
             $found_files = glob($pattern, GLOB_BRACE);
             $files = array_merge($files, $found_files);
         }
-        // print_debug($files); die;
+
+        // Custom sort function for file and folder sorting
+        usort($files, function($a, $b) {
+            // Extract folder numbers: "1_basic", "2_test" → 1, 2
+            preg_match('#/contents/(\d+)_#', $a, $ma);
+            preg_match('#/contents/(\d+)_#', $b, $mb);
+            $folderA = intval($ma[1] ?? 0);
+            $folderB = intval($mb[1] ?? 0);
+
+            // First: compare folder numbers
+            if ($folderA !== $folderB) {
+                return $folderA <=> $folderB;
+            }
+
+            // Same folder → extract the leading number from the basename
+            $basenameA = basename($a);
+            $basenameB = basename($b);
+
+            preg_match('#^(\d+)_#', $basenameA, $fa);
+            preg_match('#^(\d+)_#', $basenameB, $fb);
+            
+            $fileA = intval($fa[1] ?? PHP_INT_MAX); // Use large number if no match
+            $fileB = intval($fb[1] ?? PHP_INT_MAX);
+            
+            return $fileA <=> $fileB;
+        });
 
         // 2. This array will store the final nested navigation
         $tree = [];
