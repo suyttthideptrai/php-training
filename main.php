@@ -1,28 +1,26 @@
 <?php
 require_once 'utils.php';
 require_once 'bootstrap.php';
+require_once 'cores/ContentManager.php';
+require_once 'cores/ContentBuilder.php';
+require_once 'config.php';
 
-$SUPPORTED_CONTENT_EXTENSIONS = ['md', 'php'];
-
-// List all markdown files under /content
-
-$base_dir = base_path('contents');
-$nav_data = ContentUtils::get_navigation_data($base_dir, $SUPPORTED_CONTENT_EXTENSIONS);
-
+$config = new Config();
+$ContentManager = ContentManager::get_instance(
+    base_path(
+      $config->BASE_CONTENT_DIR
+    ),
+    $config->SUPPORTED_CONTENT_TYPES
+);
+$nav_data = $ContentManager->get_navigation_data();
+$ContentBuilder = ContentBuilder::get_instance();
 
 // Content resolve
-$CONTENT_TYPE = '';
-$page = $_GET['f'] ?? '';
-if (empty($page)) {
-    $page = '/home.md'; // default page
-}
-if (StringUtils::get_file_extension($page) === 'php') {
-    $CONTENT_TYPE = 'php';
-} else {
-    $CONTENT_TYPE = 'md';
-}
+$page_uri = $_GET['f'] ?? '';
+$page_content = $ContentBuilder->get_content($page_uri);
 
-$page_dir = $base_dir . '/' . $page;
+
+$page_dir = $ContentManager->get_base_content_path() . '/' . $page;
 $source = '';
 
 $source = file_get_contents($page_dir);
@@ -38,6 +36,7 @@ $html_source = htmlspecialchars($source, ENT_QUOTES, 'UTF-8');
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/public/assets/css/bootstrap5.0.2.min.css">
   <link rel="stylesheet" href="/public/assets/css/hightlightjs.default.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
   <title>Training PHP</title>
     <style>
     body {
@@ -143,25 +142,19 @@ $html_source = htmlspecialchars($source, ENT_QUOTES, 'UTF-8');
   <!-- TOGGLE SHOW SOURCE BUTTON FOR MD -->
 
   <!-- BEGIN SOURCE -->
-  <div id="page-content-source" style="display: none;"><?php echo HtmlUtils::wrapCode($html_source, true); ?></div>
+  <div id="page-content-source" style="display: none;"><?php echo HtmlUtils::wrapCode($page_content->get_content_source(), true); ?></div>
   <!-- END SOURCE -->
 
   <!-- BEGIN CONTENT -->
   <div id="page-content" class="h-100">
     <!-- CONTENT TYPE MARKDOWN -->
-    <?php if ($CONTENT_TYPE === 'md'): ?>
-      <?php if (str_contains($page, 'test_markdown_html_parser')) {
-          echo "<h2>Debug Markdown Parser</h2>";
-          echo markdown($source, true);
-      } else {
-          echo markdown($source);
-      }
-      ?>
+    <?php if ('md' === $page_content->get_content_type()): ?>
+      <?php echo $page_content->get_content(); ?>
     <!-- CONTENT TYPE PHP -->
-    <?php elseif ($CONTENT_TYPE === 'php'): ?>
+    <?php elseif ('php' === $page_content->get_content_type()): ?>
       <?php
       // Thực thi file PHP và hiển thị kết quả
-      $page_dir = base_path('contents/' . $page);
+      $page_dir = base_path($page_content->get_content());
       include $page_dir;
       ?>
     <!-- CONTENT TYPE UNKNOWN -->
